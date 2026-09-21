@@ -54,7 +54,8 @@
         // ================= Escena WebGL (Three.js) =================
         const canvas = document.getElementById('galaxyCanvas');
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        // Utilizar toda la resolución del teléfono (súper alta definición)
+        renderer.setPixelRatio(window.devicePixelRatio || 1);
         renderer.setSize(window.innerWidth, window.innerHeight);
         
         const scene = new THREE.Scene();
@@ -219,66 +220,60 @@
             "Con mucho cariño... de parte de Renato 💛"
         ];
 
-        function createTextTexture(text) {
-            const c = document.createElement('canvas');
-            c.width = 1024; c.height = 128;
-            const ctx = c.getContext('2d');
-            ctx.textAlign = 'center'; 
-            ctx.textBaseline = 'middle';
-            
-            // Sombra/Brillo
-            ctx.shadowColor = '#fce700'; 
-            ctx.shadowBlur = 15;
-            
-            let fontSize = 35; // Un poco más pequeño para acomodar textos largos
-            ctx.font = `bold ${fontSize}px 'Poppins', sans-serif`;
-            
-            // Borde oscuro para que se lea en el espacio
-            ctx.lineWidth = 5;
-            ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-            ctx.strokeText(text, c.width/2, c.height/2);
-            
-            // Relleno amarillo
-            ctx.fillStyle = '#ffeb3b';
-            ctx.fillText(text, c.width/2, c.height/2);
-            
-            return new THREE.CanvasTexture(c);
-        }
-
-        const textGroup = new THREE.Group();
-        scene.add(textGroup);
+        const htmlWishes = [];
+        const labelsContainer = document.createElement('div');
+        labelsContainer.style.position = 'absolute';
+        labelsContainer.style.top = '0';
+        labelsContainer.style.left = '0';
+        labelsContainer.style.width = '100%';
+        labelsContainer.style.height = '100%';
+        labelsContainer.style.pointerEvents = 'none';
+        labelsContainer.style.overflow = 'hidden';
+        document.body.appendChild(labelsContainer);
 
         wishes.forEach((text, i) => {
-            const tex = createTextTexture(text);
-            const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
-            const sp = new THREE.Sprite(mat);
-            
-            sp.scale.set(120, 15, 1);
-            
-            // Distribuirlos por una espiral mucho más amplia para que no colisionen
+            // 1. Crear el elemento HTML (Texto 100% nítido, sin pixelado)
+            const el = document.createElement('div');
+            el.innerText = text;
+            el.style.position = 'absolute';
+            el.style.color = '#ffeb3b';
+            el.style.fontFamily = "'Poppins', sans-serif";
+            el.style.fontWeight = 'bold';
+            el.style.fontSize = '14px';
+            el.style.whiteSpace = 'nowrap';
+            el.style.textAlign = 'center';
+            el.style.textShadow = '0 0 10px #fce700, 2px 2px 4px rgba(0,0,0,1), -2px -2px 4px rgba(0,0,0,1)';
+            el.style.willChange = 'transform, opacity';
+            labelsContainer.appendChild(el);
+
+            // 2. Coordenadas 3D
             let dist = 60 + (i * (600 / wishes.length));
             let angle = (dist * 0.015) + ((i % 2) * Math.PI) + (Math.random() * 0.5);
-            
-            // Variar la altura para dar un efecto de nube de mensajes 3D
             let heightOffset = (Math.random() - 0.5) * 60;
             if (i >= wishes.length - 2) {
-                heightOffset = 30; // Los últimos mensajes (Ana, Renato) más arriba para resaltar
+                heightOffset = 30;
             }
             
-            sp.position.set(dist * Math.cos(angle), heightOffset, dist * Math.sin(angle));
-            sp.userData = { 
-                dist: dist, 
-                angle: angle, 
+            const position = new THREE.Vector3(
+                dist * Math.cos(angle), 
+                heightOffset, 
+                dist * Math.sin(angle)
+            );
+
+            htmlWishes.push({
+                el: el,
+                position: position,
+                dist: dist,
+                angle: angle,
                 speed: 0.0003 + (10 / (dist + 50)) * 0.01,
                 yOffset: heightOffset
-            };
-            textGroup.add(sp);
+            });
 
-            // Añadir una flor grande justo debajo del texto
+            // Añadir una flor grande justo debajo del texto (en el mundo WebGL)
             const bigFlower = new THREE.Sprite(flowerMat);
             bigFlower.scale.set(20, 20, 1);
-            bigFlower.position.set(dist * Math.cos(angle), heightOffset - 15, dist * Math.sin(angle));
-            bigFlower.userData = { dist: dist, angle: angle, speed: sp.userData.speed, yOffset: heightOffset - 15 };
+            bigFlower.position.set(position.x, heightOffset - 15, position.z);
+            bigFlower.userData = { dist: dist, angle: angle, speed: htmlWishes[i].speed, yOffset: heightOffset - 15 };
             flowerGroup.add(bigFlower);
         });
 
@@ -352,14 +347,46 @@
                 }
             });
             
-            // Orbitar textos
-            textGroup.children.forEach(sp => {
-                sp.userData.angle -= sp.userData.speed;
-                sp.position.x = sp.userData.dist * Math.cos(sp.userData.angle);
-                sp.position.z = sp.userData.dist * Math.sin(sp.userData.angle);
+            // Orbitar y proyectar textos HTML
+            htmlWishes.forEach(item => {
+                item.angle -= item.speed;
+                item.position.x = item.dist * Math.cos(item.angle);
+                item.position.z = item.dist * Math.sin(item.angle);
+                item.position.y = item.yOffset + Math.sin(item.angle * 10) * 5;
                 
-                // Hacer que el texto flote suavemente alrededor de su altura específica
-                sp.position.y = sp.userData.yOffset + Math.sin(sp.userData.angle * 10) * 5;
+                // Proyectar coordenadas 3D a la pantalla 2D
+                const vector = item.position.clone();
+                vector.project(camera);
+                
+                // Si está detrás de la cámara, ocultarlo
+                if (vector.z > 1.0 || vector.z < -1.0) {
+                    item.el.style.opacity = '0';
+                    return;
+                }
+                
+                // Calcular posición en píxeles en la pantalla
+                const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+                const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
+                
+                // Calcular escala visual basada en la distancia de la cámara al objeto
+                let camDist = camera.position.distanceTo(item.position);
+                
+                // Ajustamos el numerador para que los textos se vean de tamaño normal y escalen bien
+                let scale = 200 / camDist; 
+                
+                // Límite de escala (permitimos que se hagan más pequeños y más grandes)
+                scale = Math.max(0.15, Math.min(scale, 4.0));
+                
+                // Ocultar suavemente si está muy lejos
+                let opacity = scale > 0.25 ? 1.0 : (scale - 0.15) * 10;
+                
+                // Usar left/top para posición, y transform solo para el centrado y escalado puro
+                item.el.style.left = `${x}px`;
+                item.el.style.top = `${y}px`;
+                item.el.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                
+                item.el.style.opacity = opacity.toString();
+                item.el.style.zIndex = Math.round((1 - vector.z) * 10000);
             });
             
             // Orbitar estrellas (Polvo estelar rota entero para optimizar)

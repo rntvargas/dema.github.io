@@ -1,280 +1,411 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="icon" href="img/flowers.png" type="image/x-icon">
     <title>FLORES PARA ANA MADELEY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="img/flowers.png" type="image/x-icon">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            background-image: radial-gradient(circle at center, #111 0%, #000 100%);
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+        }
+        #galaxyCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        #click-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            color: #fce700;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999; font-size: 2.5rem; cursor: pointer; text-align: center;
+            text-shadow: 0 0 20px #fce700;
+            transition: opacity 1s ease;
+        }
+        audio { display: none; }
+    </style>
 </head>
+<body>
+    <div id="click-overlay">Toca la pantalla para entrar al universo...</div>
+    <audio id="bg-music" src="img/Floricienta.mp3" loop></audio>
+    <canvas id="galaxyCanvas"></canvas>
 
-<body class="container">
-    <audio src="img/Floricienta.mp3" autoplay loop>
-    Tu navegador no soporta el elemento de audio.
-    </audio>
-    <div class="night"></div>
-    <div class="flowers">
-      <div class="flower flower--1">
-        <div class="flower__leafs flower__leafs--1">
-          <div class="flower__leaf flower__leaf--1"></div>
-          <div class="flower__leaf flower__leaf--2"></div>
-          <div class="flower__leaf flower__leaf--3"></div>
-          <div class="flower__leaf flower__leaf--4"></div>
-          <div class="flower__white-circle"></div>
-  
-          <div class="flower__light flower__light--1"></div>
-          <div class="flower__light flower__light--2"></div>
-          <div class="flower__light flower__light--3"></div>
-          <div class="flower__light flower__light--4"></div>
-          <div class="flower__light flower__light--5"></div>
-          <div class="flower__light flower__light--6"></div>
-          <div class="flower__light flower__light--7"></div>
-          <div class="flower__light flower__light--8"></div>
-        </div>
-        <div class="flower__line">
-          <div class="flower__line__leaf flower__line__leaf--1"></div>
-          <div class="flower__line__leaf flower__line__leaf--2"></div>
-          <div class="flower__line__leaf flower__line__leaf--3"></div>
-          <div class="flower__line__leaf flower__line__leaf--4"></div>
-          <div class="flower__line__leaf flower__line__leaf--5"></div>
-          <div class="flower__line__leaf flower__line__leaf--6"></div>
-        </div>
-      </div>
-  
-      <div class="flower flower--2">
-        <div class="flower__leafs flower__leafs--2">
-          <div class="flower__leaf flower__leaf--1"></div>
-          <div class="flower__leaf flower__leaf--2"></div>
-          <div class="flower__leaf flower__leaf--3"></div>
-          <div class="flower__leaf flower__leaf--4"></div>
-          <div class="flower__white-circle"></div>
-  
-          <div class="flower__light flower__light--1"></div>
-          <div class="flower__light flower__light--2"></div>
-          <div class="flower__light flower__light--3"></div>
-          <div class="flower__light flower__light--4"></div>
-          <div class="flower__light flower__light--5"></div>
-          <div class="flower__light flower__light--6"></div>
-          <div class="flower__light flower__light--7"></div>
-          <div class="flower__light flower__light--8"></div>
-        </div>
-        <div class="flower__line">
-          <div class="flower__line__leaf flower__line__leaf--1"></div>
-          <div class="flower__line__leaf flower__line__leaf--2"></div>
-          <div class="flower__line__leaf flower__line__leaf--3"></div>
-          <div class="flower__line__leaf flower__line__leaf--4"></div>
-        </div>
-      </div>
-  
-      <div class="flower flower--3">
-        <div class="flower__leafs flower__leafs--3">
-          <div class="flower__leaf flower__leaf--1"></div>
-          <div class="flower__leaf flower__leaf--2"></div>
-          <div class="flower__leaf flower__leaf--3"></div>
-          <div class="flower__leaf flower__leaf--4"></div>
-          <div class="flower__white-circle"></div>
-  
-          <div class="flower__light flower__light--1"></div>
-          <div class="flower__light flower__light--2"></div>
-          <div class="flower__light flower__light--3"></div>
-          <div class="flower__light flower__light--4"></div>
-          <div class="flower__light flower__light--5"></div>
-          <div class="flower__light flower__light--6"></div>
-          <div class="flower__light flower__light--7"></div>
-          <div class="flower__light flower__light--8"></div>
-        </div>
-        <div class="flower__line">
-          <div class="flower__line__leaf flower__line__leaf--1"></div>
-          <div class="flower__line__leaf flower__line__leaf--2"></div>
-          <div class="flower__line__leaf flower__line__leaf--3"></div>
-          <div class="flower__line__leaf flower__line__leaf--4"></div>
-        </div>
-      </div>
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
 
-      <!-- Nueva flor añadida -->
-      <div class="flower flower--4">
-        <div class="flower__leafs flower__leafs--4">
-          <div class="flower__leaf flower__leaf--1"></div>
-          <div class="flower__leaf flower__leaf--2"></div>
-          <div class="flower__leaf flower__leaf--3"></div>
-          <div class="flower__leaf flower__leaf--4"></div>
-          <div class="flower__white-circle"></div>
-  
-          <div class="flower__light flower__light--1"></div>
-          <div class="flower__light flower__light--2"></div>
-          <div class="flower__light flower__light--3"></div>
-          <div class="flower__light flower__light--4"></div>
-          <div class="flower__light flower__light--5"></div>
-          <div class="flower__light flower__light--6"></div>
-          <div class="flower__light flower__light--7"></div>
-          <div class="flower__light flower__light--8"></div>
-        </div>
-        <div class="flower__line">
-          <div class="flower__line__leaf flower__line__leaf--1"></div>
-          <div class="flower__line__leaf flower__line__leaf--2"></div>
-          <div class="flower__line__leaf flower__line__leaf--3"></div>
-          <div class="flower__line__leaf flower__line__leaf--4"></div>
-        </div>
-      </div>
-  
-      <div class="grow-ans" style="--d:1.2s">
-        <div class="flower__g-long">
-          <div class="flower__g-long__top"></div>
-          <div class="flower__g-long__bottom"></div>
-        </div>
-      </div>
-  
-      <div class="growing-grass">
-        <div class="flower__grass flower__grass--1">
-          <div class="flower__grass--top"></div>
-          <div class="flower__grass--bottom"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--1"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--2"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--3"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--4"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--5"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--6"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--7"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--8"></div>
-          <div class="flower__grass__overlay"></div>
-        </div>
-      </div>
-  
-      <div class="grow-ans" style="--d:3.2s">
-        <div class="flower__g-fr">
-          <div class="leaf"></div>
-          <div class="flower__g-fr__leaf flower__g-fr__leaf--1"></div>
-          <div class="flower__g-fr__leaf flower__g-fr__leaf--2"></div>
-          <div class="flower__g-fr__leaf flower__g-fr__leaf--3"></div>
-          <div class="flower__g-fr__leaf flower__g-fr__leaf--4"></div>
-          <div class="flower__g-fr__leaf flower__g-fr__leaf--5"></div>
-          <div class="flower__g-fr__leaf flower__g-fr__leaf--6"></div>
-          <div class="flower__g-fr__leaf flower__g-fr__leaf--7"></div>
-          <div class="flower__g-fr__leaf flower__g-fr__leaf--8"></div>
-        </div>
-      </div>
-  
-      <div class="long-g long-g--0">
-        <div class="grow-ans" style="--d:3s">
-          <div class="leaf leaf--0"></div>
-        </div>
-        <div class="grow-ans" style="--d:2.2s">
-          <div class="leaf leaf--1"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.4s">
-          <div class="leaf leaf--2"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.6s">
-          <div class="leaf leaf--3"></div>
-        </div>
-      </div>
-  
-      <div class="long-g long-g--1">
-        <div class="grow-ans" style="--d:3.6s">
-          <div class="leaf leaf--0"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.8s">
-          <div class="leaf leaf--1"></div>
-        </div>
-        <div class="grow-ans" style="--d:4s">
-          <div class="leaf leaf--2"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.2s">
-          <div class="leaf leaf--3"></div>
-        </div>
-      </div>
-  
-      <div class="long-g long-g--2">
-        <div class="grow-ans" style="--d:4s">
-          <div class="leaf leaf--0"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.2s">
-          <div class="leaf leaf--1"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.4s">
-          <div class="leaf leaf--2"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.6s">
-          <div class="leaf leaf--3"></div>
-        </div>
-      </div>
-  
-      <div class="long-g long-g--3">
-        <div class="grow-ans" style="--d:4s">
-          <div class="leaf leaf--0"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.2s">
-          <div class="leaf leaf--1"></div>
-        </div>
-        <div class="grow-ans" style="--d:3s">
-          <div class="leaf leaf--2"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.6s">
-          <div class="leaf leaf--3"></div>
-        </div>
-      </div>
-  
-      <div class="long-g long-g--4">
-        <div class="grow-ans" style="--d:4s">
-          <div class="leaf leaf--0"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.2s">
-          <div class="leaf leaf--1"></div>
-        </div>
-        <div class="grow-ans" style="--d:3s">
-          <div class="leaf leaf--2"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.6s">
-          <div class="leaf leaf--3"></div>
-        </div>
-      </div>
-  
-      <div class="long-g long-g--5">
-        <div class="grow-ans" style="--d:4s">
-          <div class="leaf leaf--0"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.2s">
-          <div class="leaf leaf--1"></div>
-        </div>
-        <div class="grow-ans" style="--d:3s">
-          <div class="leaf leaf--2"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.6s">
-          <div class="leaf leaf--3"></div>
-        </div>
-      </div>
-  
-      <div class="long-g long-g--6">
-        <div class="grow-ans" style="--d:4.2s">
-          <div class="leaf leaf--0"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.4s">
-          <div class="leaf leaf--1"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.6s">
-          <div class="leaf leaf--2"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.8s">
-          <div class="leaf leaf--3"></div>
-        </div>
-      </div>
-  
-      <div class="long-g long-g--7">
-        <div class="grow-ans" style="--d:3s">
-          <div class="leaf leaf--0"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.2s">
-          <div class="leaf leaf--1"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.5s">
-          <div class="leaf leaf--2"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.6s">
-          <div class="leaf leaf--3"></div>
-        </div>
-      </div>
-    </div>
-    <script src="main.js"></script>
-  </body>
+        const overlay = document.getElementById('click-overlay');
+        const audio = document.getElementById('bg-music');
+
+        overlay.addEventListener('click', () => {
+            audio.play();
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.style.display = 'none', 1000);
+        });
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        // Interacción suave con el mouse
+        let mouse = { x: width / 2, y: height / 2 };
+        let targetTiltX = 0.5; // Inclinación 3D realista de la galaxia por defecto
+        let targetTiltY = 0;
+        let currentTiltX = 0.5;
+        let currentTiltY = 0;
+        
+        let globalZoom = 1.0; // Control de zoom
+        let initialPinchDistance = null;
+        let initialZoom = 1.0;
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            targetTiltX = 0.5 + (e.clientY - height / 2) * 0.001;
+            targetTiltY = (e.clientX - width / 2) * 0.001;
+        });
+
+        window.addEventListener('wheel', (e) => {
+            globalZoom += e.deltaY * -0.001;
+            globalZoom = Math.min(Math.max(0.4, globalZoom), 3.0); // Limitar zoom entre 0.4x y 3.0x
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2) {
+                // Gestos de pellizco (Pinch to zoom)
+                if (initialPinchDistance) {
+                    let currentDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    globalZoom = initialZoom * (currentDistance / initialPinchDistance);
+                    globalZoom = Math.min(Math.max(0.4, globalZoom), 3.0);
+                }
+            } else if (e.touches.length === 1) {
+                mouse.x = e.touches[0].clientX;
+                mouse.y = e.touches[0].clientY;
+                targetTiltX = 0.5 + (e.touches[0].clientY - height / 2) * 0.001;
+                targetTiltY = (e.touches[0].clientX - width / 2) * 0.001;
+            }
+        });
+
+        // Soporte para toques directos (taps) en celular
+        window.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                initialPinchDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                initialZoom = globalZoom;
+            } else if (e.touches.length === 1) {
+                mouse.x = e.touches[0].clientX;
+                mouse.y = e.touches[0].clientY;
+                targetTiltX = 0.5 + (e.touches[0].clientY - height / 2) * 0.001;
+                targetTiltY = (e.touches[0].clientX - width / 2) * 0.001;
+            }
+        });
+
+        // --- CREADOR DE FLORES AMARILLAS 100% REALES ---
+        // En lugar de usar la imagen original (que tal vez no era la correcta),
+        // dibujamos matemáticamente una flor amarilla perfecta con pétalos y centro naranja.
+        const cachedFlower = document.createElement('canvas');
+        cachedFlower.width = 100;
+        cachedFlower.height = 100;
+        const cacheCtx = cachedFlower.getContext('2d');
+
+        cacheCtx.shadowBlur = 20;
+        cacheCtx.shadowColor = '#fce700';
+        
+        let cx = 50, cy = 50;
+        cacheCtx.translate(cx, cy);
+        
+        // Dibujar 5 pétalos amarillos
+        cacheCtx.fillStyle = '#ffeb3b'; // Amarillo brillante
+        cacheCtx.strokeStyle = '#fbc02d'; // Borde amarillo un poco más oscuro
+        cacheCtx.lineWidth = 2;
+        
+        for (let i = 0; i < 5; i++) {
+            cacheCtx.beginPath();
+            cacheCtx.moveTo(0, 0);
+            cacheCtx.bezierCurveTo(-20, -20, -20, -40, 0, -40);
+            cacheCtx.bezierCurveTo(20, -40, 20, -20, 0, 0);
+            cacheCtx.fill();
+            cacheCtx.stroke();
+            cacheCtx.rotate((Math.PI * 2) / 5);
+        }
+        
+        // Dibujar el centro de la flor (Naranja/Dorado)
+        cacheCtx.shadowBlur = 10;
+        cacheCtx.fillStyle = '#f57f17'; // Naranja oscuro
+        cacheCtx.beginPath();
+        cacheCtx.arc(0, 0, 8, 0, Math.PI * 2);
+        cacheCtx.fill();
+        
+        cacheCtx.translate(-cx, -cy);
+        // -----------------------------------------------------
+
+        const wishes = [
+            "Dicen que las estrellas brillan más cuando alguien especial las mira ✨",
+            "Tienes el don de pintar el mundo de colores para los más pequeños 🎨",
+            "Me alegra que el universo nos haya cruzado 🌌",
+            "Serás la mejor maestra, de esas que nunca se olvidan 🖍️",
+            "Hay sonrisas que iluminan galaxias enteras 💛",
+            "Es hermoso verte crecer mientras ayudas a crecer a otros 👧👦",
+            "Ojalá todos tus días sean tan brillantes como hoy 🌻",
+            "Tienes el corazón perfecto para guiar los primeros pasos del mundo 💛",
+            "Algunas personas simplemente tienen magia 🌟",
+            "Tu vocación es tan brillante y única como esta galaxia ✨",
+            "Es lindo saber que estás ahí 🌙",
+            "Las flores amarillas tienen un significado... por si no lo sabías 💛",
+            "No cualquiera hace que el tiempo se detenga ✨",
+            "Espero que hoy te saquen muchas sonrisas 🌻",
+            "Ana Madeley... un nombre que suena a puras cosas buenas 💫",
+            "Quien te conoce sabe la suerte que tiene 🌟",
+            "A veces, las mejores cosas no se dicen, se demuestran 💛"
+        ];
+
+        let particles = [];
+        const numParticles = 2500; // Galaxia masiva y realista
+
+        // Funciones auxiliares para realismo
+        function randomGaussian() {
+            let u = 0, v = 0;
+            while(u === 0) u = Math.random(); 
+            while(v === 0) v = Math.random();
+            return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+        }
+
+        class Particle {
+            constructor(index) {
+                let maxRadius = Math.max(width, height) * 0.7;
+                
+                // Tipo de partícula
+                // 0: Polvo estelar (puntos minúsculos) - 75%
+                // 1: Flores estelares (flores amarillas) - 25%
+                // 2: Flores de deseos
+                this.type = Math.random() < 0.75 ? 0 : 1;
+                
+                let isCore = Math.random() < 0.2; // 20% forman el núcleo central brillante
+                
+                if (isCore) {
+                    this.radius = Math.abs(randomGaussian() * (maxRadius * 0.05));
+                    this.angle = Math.random() * Math.PI * 2;
+                    this.yOffset = randomGaussian() * (maxRadius * 0.04);
+                } else {
+                    // Brazos espirales realistas
+                    let arms = 2; 
+                    let armIndex = Math.floor(Math.random() * arms);
+                    
+                    let dist = Math.random(); 
+                    dist = Math.pow(dist, 1.5); 
+                    this.radius = (dist * maxRadius) + 20; // Alejar del centro
+                    
+                    // La espiral: ángulo = logaritmo del radio
+                    this.angle = (this.radius * 0.015) + (armIndex * Math.PI);
+                    
+                    // Dispersión (polvo interestelar)
+                    let scatter = randomGaussian() * (this.radius * 0.15);
+                    this.radius += scatter;
+                    this.angle += randomGaussian() * 0.2;
+                    
+                    // El disco es delgado
+                    this.yOffset = randomGaussian() * (maxRadius * 0.02);
+                }
+                
+                // Tamaño y velocidad kepleriana (más rápido cerca del centro)
+                if (this.type === 0) {
+                    this.size = Math.random() * 2 + 0.5; // Estrellas diminutas
+                } else {
+                    this.size = Math.random() * 10 + 4; // Flores estelares
+                }
+                
+                this.speed = 0.0005 + (10 / (this.radius + 50)) * 0.01;
+                
+                this.wish = null;
+                // Asignar deseos
+                if (index < wishes.length) {
+                    this.type = 2;
+                    this.wish = wishes[index];
+                    this.size = 40; 
+                    // Distribuirlas equitativamente en la espiral para que no se salgan de pantalla
+                    this.radius = 60 + (index * (Math.min(maxRadius * 0.8, 500) / wishes.length)); 
+                    this.angle = (this.radius * 0.015) + ((index % 2) * Math.PI) + (Math.random()*0.5);
+                    this.yOffset = 0; // Mantenerlas en el plano central
+                }
+                
+                this.depth = 0;
+                this.screenX = 0;
+                this.screenY = 0;
+                this.screenSize = 0;
+                this.flowerRotation = Math.random() * Math.PI * 2;
+                this.flowerRotationSpeed = (Math.random() - 0.5) * 0.02;
+                
+                // Color base para polvo estelar (amarillento/blanco)
+                let colors = ['#ffffff', '#fce700', '#ffeb3b', '#fff9c4'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            update() {
+                this.angle -= this.speed;
+                if (this.type > 0) this.flowerRotation += this.flowerRotationSpeed;
+
+                let x = Math.cos(this.angle) * this.radius;
+                let z = Math.sin(this.angle) * this.radius;
+                let y = this.yOffset;
+                
+                // Rotación 3D (Inclinación de la galaxia)
+                let y1 = y * Math.cos(currentTiltX) - z * Math.sin(currentTiltX);
+                let z1 = y * Math.sin(currentTiltX) + z * Math.cos(currentTiltX);
+                
+                let x2 = x * Math.cos(currentTiltY) + z1 * Math.sin(currentTiltY);
+                let z2 = -x * Math.sin(currentTiltY) + z1 * Math.cos(currentTiltY);
+                
+                this.depth = z2;
+                
+                let fov = 800;
+                let perspective = (fov / (fov + z2)) * globalZoom;
+                
+                this.screenX = width / 2 + x2 * perspective;
+                this.screenY = height / 2 + y1 * perspective;
+                this.screenSize = this.size * perspective;
+
+                // Repeler las flores de deseo con el mouse
+                if (this.type === 2) {
+                    let dx = this.screenX - mouse.x;
+                    let dy = this.screenY - mouse.y;
+                    let distSq = dx * dx + dy * dy;
+                    if (distSq < 22500) { // 150px
+                        let force = (150 - Math.sqrt(distSq)) / 150;
+                        this.screenX += (dx / Math.sqrt(distSq)) * force * 15;
+                        this.screenY += (dy / Math.sqrt(distSq)) * force * 15;
+                        this.screenSize += force * 10;
+                    }
+                }
+            }
+
+            draw() {
+                if (this.screenSize <= 0 || this.depth > 800) return; 
+                
+                // Polvo estelar (ultra rápido)
+                if (this.type === 0) {
+                    ctx.fillStyle = this.color;
+                    ctx.globalAlpha = Math.min(1, 150 / (this.depth + 400)); // Niebla de lejanía
+                    ctx.fillRect(this.screenX, this.screenY, this.screenSize, this.screenSize);
+                    ctx.globalAlpha = 1;
+                    return;
+                }
+                
+                // Flores
+                ctx.save();
+                ctx.translate(this.screenX, this.screenY);
+                ctx.rotate(this.flowerRotation);
+                
+                // Dibujar usando la flor amarilla perfecta pre-creada
+                let drawSize = this.screenSize * (this.type === 2 ? 1.66 : 1.2); 
+                ctx.drawImage(cachedFlower, -drawSize / 2, -drawSize / 2, drawSize, drawSize);
+                
+                ctx.restore();
+
+                // Textos
+                if (this.wish) {
+                    let dx = this.screenX - mouse.x;
+                    let dy = this.screenY - mouse.y;
+                    let distSq = dx * dx + dy * dy;
+                    
+                    if (distSq < 62500) { // 250px
+                        let opacity = 1 - (Math.sqrt(distSq) / 250);
+                        opacity = Math.pow(opacity, 1.5);
+
+                        if (opacity > 0.01) {
+                            ctx.save();
+                            ctx.globalAlpha = opacity;
+                            
+                            // Tamaño de fuente responsivo: más pequeño en celulares para que quepa bien el texto
+                            let baseFontSize = width < 600 ? 14 : 22;
+                            ctx.font = 'bold ' + Math.max(10, baseFontSize * (800 / (800 + this.depth))) + 'px Poppins, sans-serif';
+                            
+                            let textOffset = this.screenSize / 2 + (width < 600 ? 10 : 15);
+                            
+                            // Borde
+                            ctx.lineWidth = 3;
+                            ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+                            ctx.strokeText(this.wish, this.screenX + textOffset, this.screenY + 5);
+                            // Relleno
+                            ctx.fillStyle = '#fce700'; 
+                            ctx.fillText(this.wish, this.screenX + textOffset, this.screenY + 5);
+                            
+                            ctx.restore();
+                        }
+                    }
+                }
+            }
+        }
+
+        function init() {
+            particles = [];
+            for (let i = 0; i < numParticles; i++) {
+                particles.push(new Particle(i));
+            }
+        }
+
+        function drawCoreGlow() {
+            // El núcleo de la galaxia brilla
+            // Necesitamos saber dónde está el centro en la pantalla
+            let y1 = 0 * Math.cos(currentTiltX) - 0 * Math.sin(currentTiltX);
+            let z1 = 0 * Math.sin(currentTiltX) + 0 * Math.cos(currentTiltX);
+            let x2 = 0 * Math.cos(currentTiltY) + z1 * Math.sin(currentTiltY);
+            let z2 = -0 * Math.sin(currentTiltY) + z1 * Math.cos(currentTiltY);
+            let fov = 800;
+            let perspective = (fov / (fov + z2)) * globalZoom;
+            let cx = width / 2 + x2 * perspective;
+            let cy = height / 2 + y1 * perspective;
+            
+            let gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, 300 * perspective);
+            gradient.addColorStop(0, 'rgba(255, 245, 150, 0.25)');
+            gradient.addColorStop(0.2, 'rgba(252, 231, 0, 0.1)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            ctx.fillStyle = gradient;
+            // Solo llenar la zona central es más rápido, pero llenamos todo para asegurar
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        function animate() {
+            // Fondo
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Interpolar tilt
+            currentTiltX += (targetTiltX - currentTiltX) * 0.05;
+            currentTiltY += (targetTiltY - currentTiltY) * 0.05;
+
+            drawCoreGlow();
+
+            // Z-Sort
+            particles.sort((a, b) => b.depth - a.depth);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        init();
+        animate();
+    </script>
+</body>
 </html>

@@ -40,12 +40,8 @@
     <audio id="bg-music" src="img/Floricienta.mp3" loop></audio>
     <canvas id="galaxyCanvas"></canvas>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        const canvas = document.getElementById('galaxyCanvas');
-        const ctx = canvas.getContext('2d');
-        let width = canvas.width = window.innerWidth;
-        let height = canvas.height = window.innerHeight;
-
         const overlay = document.getElementById('click-overlay');
         const audio = document.getElementById('bg-music');
 
@@ -55,108 +51,132 @@
             setTimeout(() => overlay.style.display = 'none', 1000);
         });
 
-        window.addEventListener('resize', () => {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        });
-
-        // Interacción suave con el mouse
-        let mouse = { x: width / 2, y: height / 2 };
-        let targetTiltX = 0.5; // Inclinación 3D realista de la galaxia por defecto
-        let targetTiltY = 0;
-        let currentTiltX = 0.5;
-        let currentTiltY = 0;
+        // ================= Escena WebGL (Three.js) =================
+        const canvas = document.getElementById('galaxyCanvas');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
         
-        let globalZoom = 1.0; // Control de zoom
-        let initialPinchDistance = null;
-        let initialZoom = 1.0;
-
-        window.addEventListener('mousemove', (e) => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-            targetTiltX = 0.5 + (e.clientY - height / 2) * 0.001;
-            targetTiltY = (e.clientX - width / 2) * 0.001;
-        });
-
-        window.addEventListener('wheel', (e) => {
-            globalZoom += e.deltaY * -0.001;
-            globalZoom = Math.min(Math.max(0.4, globalZoom), 3.0); // Limitar zoom entre 0.4x y 3.0x
-        });
-
-        window.addEventListener('touchmove', (e) => {
-            if (e.touches.length === 2) {
-                // Gestos de pellizco (Pinch to zoom)
-                if (initialPinchDistance) {
-                    let currentDistance = Math.hypot(
-                        e.touches[0].clientX - e.touches[1].clientX,
-                        e.touches[0].clientY - e.touches[1].clientY
-                    );
-                    globalZoom = initialZoom * (currentDistance / initialPinchDistance);
-                    globalZoom = Math.min(Math.max(0.4, globalZoom), 3.0);
-                }
-            } else if (e.touches.length === 1) {
-                mouse.x = e.touches[0].clientX;
-                mouse.y = e.touches[0].clientY;
-                targetTiltX = 0.5 + (e.touches[0].clientY - height / 2) * 0.001;
-                targetTiltY = (e.touches[0].clientX - width / 2) * 0.001;
-            }
-        });
-
-        // Soporte para toques directos (taps) en celular
-        window.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 2) {
-                initialPinchDistance = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                initialZoom = globalZoom;
-            } else if (e.touches.length === 1) {
-                mouse.x = e.touches[0].clientX;
-                mouse.y = e.touches[0].clientY;
-                targetTiltX = 0.5 + (e.touches[0].clientY - height / 2) * 0.001;
-                targetTiltY = (e.touches[0].clientX - width / 2) * 0.001;
-            }
-        });
-
-        // --- CREADOR DE FLORES AMARILLAS 100% REALES ---
-        // En lugar de usar la imagen original (que tal vez no era la correcta),
-        // dibujamos matemáticamente una flor amarilla perfecta con pétalos y centro naranja.
-        const cachedFlower = document.createElement('canvas');
-        cachedFlower.width = 100;
-        cachedFlower.height = 100;
-        const cacheCtx = cachedFlower.getContext('2d');
-
-        cacheCtx.shadowBlur = 20;
-        cacheCtx.shadowColor = '#fce700';
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000000);
         
-        let cx = 50, cy = 50;
-        cacheCtx.translate(cx, cy);
-        
-        // Dibujar 5 pétalos amarillos
-        cacheCtx.fillStyle = '#ffeb3b'; // Amarillo brillante
-        cacheCtx.strokeStyle = '#fbc02d'; // Borde amarillo un poco más oscuro
-        cacheCtx.lineWidth = 2;
-        
-        for (let i = 0; i < 5; i++) {
-            cacheCtx.beginPath();
-            cacheCtx.moveTo(0, 0);
-            cacheCtx.bezierCurveTo(-20, -20, -20, -40, 0, -40);
-            cacheCtx.bezierCurveTo(20, -40, 20, -20, 0, 0);
-            cacheCtx.fill();
-            cacheCtx.stroke();
-            cacheCtx.rotate((Math.PI * 2) / 5);
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 5000);
+        let targetDist = 400, currentDist = 400;
+        let rotX = 1.0, rotY = 0; // Inclinación inicial para ver la galaxia de lado
+
+        // Resplandor central (Núcleo)
+        function createCoreGlow() {
+            const c = document.createElement('canvas');
+            c.width = c.height = 512;
+            const ctx = c.getContext('2d');
+            const grad = ctx.createRadialGradient(256, 256, 10, 256, 256, 256);
+            grad.addColorStop(0, 'rgba(255, 245, 150, 1)');
+            grad.addColorStop(0.2, 'rgba(252, 231, 0, 0.8)');
+            grad.addColorStop(0.5, 'rgba(200, 150, 0, 0.3)');
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 512, 512);
+            return new THREE.CanvasTexture(c);
         }
         
-        // Dibujar el centro de la flor (Naranja/Dorado)
-        cacheCtx.shadowBlur = 10;
-        cacheCtx.fillStyle = '#f57f17'; // Naranja oscuro
-        cacheCtx.beginPath();
-        cacheCtx.arc(0, 0, 8, 0, Math.PI * 2);
-        cacheCtx.fill();
-        
-        cacheCtx.translate(-cx, -cy);
-        // -----------------------------------------------------
+        const glowMaterial = new THREE.SpriteMaterial({ 
+            map: createCoreGlow(), 
+            transparent: true, 
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        const coreGlow = new THREE.Sprite(glowMaterial);
+        coreGlow.scale.set(400, 400, 1);
+        scene.add(coreGlow);
 
+        // Crear textura de flor amarilla matemáticamente para WebGL
+        function createFlowerTexture() {
+            const c = document.createElement('canvas');
+            c.width = c.height = 128;
+            const ctx = c.getContext('2d');
+            
+            ctx.translate(64, 64);
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#fce700';
+            
+            // Pétalos
+            ctx.fillStyle = '#ffeb3b'; 
+            ctx.strokeStyle = '#fbc02d'; 
+            ctx.lineWidth = 2;
+            
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.bezierCurveTo(-25, -25, -25, -50, 0, -50);
+                ctx.bezierCurveTo(25, -50, 25, -25, 0, 0);
+                ctx.fill();
+                ctx.stroke();
+                ctx.rotate((Math.PI * 2) / 5);
+            }
+            
+            // Centro
+            ctx.shadowBlur = 5;
+            ctx.fillStyle = '#f57f17'; 
+            ctx.beginPath();
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+            ctx.fill();
+            
+            return new THREE.CanvasTexture(c);
+        }
+        const flowerTexture = createFlowerTexture();
+
+        // 1. Polvo estelar (2500 puntos diminutos)
+        const starGeo = new THREE.BufferGeometry();
+        const starPos = new Float32Array(2500 * 3);
+        for(let i = 0; i < 2500; i++){
+            // Distribución espiral
+            let dist = Math.pow(Math.random(), 1.5) * 600;
+            let angle = (dist * 0.015) + (Math.floor(Math.random() * 2) * Math.PI);
+            // Dispersión
+            dist += (Math.random() - 0.5) * 100;
+            angle += (Math.random() - 0.5) * 0.5;
+            
+            starPos[i*3+0] = dist * Math.cos(angle);
+            starPos[i*3+1] = (Math.random() - 0.5) * (dist * 0.05 + 10); // Grosor
+            starPos[i*3+2] = dist * Math.sin(angle);
+        }
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+        const starMat = new THREE.PointsMaterial({ size: 2.0, color: 0xffffff, transparent: true, opacity: 0.6, depthWrite: false });
+        const stars = new THREE.Points(starGeo, starMat);
+        scene.add(stars);
+
+        // 2. Flores amarillas espirales (500 flores)
+        const flowerGroup = new THREE.Group();
+        scene.add(flowerGroup);
+        const flowerMat = new THREE.SpriteMaterial({ map: flowerTexture, transparent: true, depthWrite: false });
+        
+        for(let i = 0; i < 500; i++){
+            const sprite = new THREE.Sprite(flowerMat);
+            let dist = Math.pow(Math.random(), 1.2) * 550 + 20;
+            let angle = (dist * 0.015) + (Math.floor(Math.random() * 2) * Math.PI);
+            dist += (Math.random() - 0.5) * 60;
+            angle += (Math.random() - 0.5) * 0.3;
+            
+            sprite.position.set(
+                dist * Math.cos(angle),
+                (Math.random() - 0.5) * (dist * 0.05),
+                dist * Math.sin(angle)
+            );
+            
+            let size = 5 + Math.random() * 10;
+            sprite.scale.set(size, size, 1);
+            
+            // Velocidad orbital (Kepleriana)
+            sprite.userData = { 
+                dist: dist, 
+                angle: angle, 
+                speed: 0.0005 + (10 / (dist + 50)) * 0.01,
+                yOffset: sprite.position.y
+            };
+            flowerGroup.add(sprite);
+        }
+
+        // 3. Deseos Flotantes (¡Muchísimos más!)
         const wishes = [
             "Dicen que las estrellas brillan más cuando alguien especial las mira ✨",
             "Tienes el don de pintar el mundo de colores para los más pequeños 🎨",
@@ -174,237 +194,187 @@
             "Espero que hoy te saquen muchas sonrisas 🌻",
             "Ana Madeley... un nombre que suena a puras cosas buenas 💫",
             "Quien te conoce sabe la suerte que tiene 🌟",
-            "A veces, las mejores cosas no se dicen, se demuestran 💛"
+            "A veces, las mejores cosas no se dicen, se demuestran 💛",
+            "El mundo necesita más personas con tu luz 🌻",
+            "Si las miradas hablaran, la mía te diría todo 💫",
+            "Tu energía es contagiosa y hace todo mejor ✨",
+            "Eres el tipo de persona que hace bonito un día gris 💛",
+            "Tienes la capacidad de hacer sentir especial a cualquiera 🌟",
+            "Hay miradas que son como un abrazo, la tuya es una de ellas 🌌",
+            "Ser maestra es un súper poder, y a ti te queda perfecto 🦸‍♀️🖍️",
+            "Incluso de lejos, iluminas como esta galaxia ✨",
+            "Contigo las pláticas nunca son aburridas 🌻",
+            "Siempre encuentras la forma de sacar una sonrisa 💛",
+            "No dejes que nadie apague ese brillo tan tuyo 🌟",
+            "Admiro mucho tu paciencia y dedicación 👧👦",
+            "Un girasol para quien siempre mira hacia la luz 🌻",
+            "El amarillo te sienta bien... pero tu sonrisa te queda mejor 💛",
+            "Qué bonito coincidir en este espacio y tiempo 🌌",
+            "Gracias por ser tan tú en un mundo tan raro ✨",
+            "Ojalá te veas con los mismos ojos bonitos con los que yo te veo 💫",
+            "Tu futuro salón de clases será el lugar más feliz 🖍️",
+            "Es imposible no fijarse en alguien con tanta luz 🌟",
+            "Te mereces todas las flores amarillas del universo 🌻",
+            "Para Ana Madeley, la flor más especial de esta galaxia 🌌",
+            "Con mucho cariño... de parte de Renato 💛"
         ];
 
-        let particles = [];
-        const numParticles = 2500; // Galaxia masiva y realista
-
-        // Funciones auxiliares para realismo
-        function randomGaussian() {
-            let u = 0, v = 0;
-            while(u === 0) u = Math.random(); 
-            while(v === 0) v = Math.random();
-            return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
-        }
-
-        class Particle {
-            constructor(index) {
-                let maxRadius = Math.max(width, height) * 0.7;
-                
-                // Tipo de partícula
-                // 0: Polvo estelar (puntos minúsculos) - 75%
-                // 1: Flores estelares (flores amarillas) - 25%
-                // 2: Flores de deseos
-                this.type = Math.random() < 0.75 ? 0 : 1;
-                
-                let isCore = Math.random() < 0.2; // 20% forman el núcleo central brillante
-                
-                if (isCore) {
-                    this.radius = Math.abs(randomGaussian() * (maxRadius * 0.05));
-                    this.angle = Math.random() * Math.PI * 2;
-                    this.yOffset = randomGaussian() * (maxRadius * 0.04);
-                } else {
-                    // Brazos espirales realistas
-                    let arms = 2; 
-                    let armIndex = Math.floor(Math.random() * arms);
-                    
-                    let dist = Math.random(); 
-                    dist = Math.pow(dist, 1.5); 
-                    this.radius = (dist * maxRadius) + 20; // Alejar del centro
-                    
-                    // La espiral: ángulo = logaritmo del radio
-                    this.angle = (this.radius * 0.015) + (armIndex * Math.PI);
-                    
-                    // Dispersión (polvo interestelar)
-                    let scatter = randomGaussian() * (this.radius * 0.15);
-                    this.radius += scatter;
-                    this.angle += randomGaussian() * 0.2;
-                    
-                    // El disco es delgado
-                    this.yOffset = randomGaussian() * (maxRadius * 0.02);
-                }
-                
-                // Tamaño y velocidad kepleriana (más rápido cerca del centro)
-                if (this.type === 0) {
-                    this.size = Math.random() * 2 + 0.5; // Estrellas diminutas
-                } else {
-                    this.size = Math.random() * 10 + 4; // Flores estelares
-                }
-                
-                this.speed = 0.0005 + (10 / (this.radius + 50)) * 0.01;
-                
-                this.wish = null;
-                // Asignar deseos
-                if (index < wishes.length) {
-                    this.type = 2;
-                    this.wish = wishes[index];
-                    this.size = 40; 
-                    // Distribuirlas equitativamente en la espiral para que no se salgan de pantalla
-                    this.radius = 60 + (index * (Math.min(maxRadius * 0.8, 500) / wishes.length)); 
-                    this.angle = (this.radius * 0.015) + ((index % 2) * Math.PI) + (Math.random()*0.5);
-                    this.yOffset = 0; // Mantenerlas en el plano central
-                }
-                
-                this.depth = 0;
-                this.screenX = 0;
-                this.screenY = 0;
-                this.screenSize = 0;
-                this.flowerRotation = Math.random() * Math.PI * 2;
-                this.flowerRotationSpeed = (Math.random() - 0.5) * 0.02;
-                
-                // Color base para polvo estelar (amarillento/blanco)
-                let colors = ['#ffffff', '#fce700', '#ffeb3b', '#fff9c4'];
-                this.color = colors[Math.floor(Math.random() * colors.length)];
-            }
-
-            update() {
-                this.angle -= this.speed;
-                if (this.type > 0) this.flowerRotation += this.flowerRotationSpeed;
-
-                let x = Math.cos(this.angle) * this.radius;
-                let z = Math.sin(this.angle) * this.radius;
-                let y = this.yOffset;
-                
-                // Rotación 3D (Inclinación de la galaxia)
-                let y1 = y * Math.cos(currentTiltX) - z * Math.sin(currentTiltX);
-                let z1 = y * Math.sin(currentTiltX) + z * Math.cos(currentTiltX);
-                
-                let x2 = x * Math.cos(currentTiltY) + z1 * Math.sin(currentTiltY);
-                let z2 = -x * Math.sin(currentTiltY) + z1 * Math.cos(currentTiltY);
-                
-                this.depth = z2;
-                
-                let fov = 800;
-                let perspective = (fov / (fov + z2)) * globalZoom;
-                
-                this.screenX = width / 2 + x2 * perspective;
-                this.screenY = height / 2 + y1 * perspective;
-                this.screenSize = this.size * perspective;
-
-                // Repeler las flores de deseo con el mouse
-                if (this.type === 2) {
-                    let dx = this.screenX - mouse.x;
-                    let dy = this.screenY - mouse.y;
-                    let distSq = dx * dx + dy * dy;
-                    if (distSq < 22500) { // 150px
-                        let force = (150 - Math.sqrt(distSq)) / 150;
-                        this.screenX += (dx / Math.sqrt(distSq)) * force * 15;
-                        this.screenY += (dy / Math.sqrt(distSq)) * force * 15;
-                        this.screenSize += force * 10;
-                    }
-                }
-            }
-
-            draw() {
-                if (this.screenSize <= 0 || this.depth > 800) return; 
-                
-                // Polvo estelar (ultra rápido)
-                if (this.type === 0) {
-                    ctx.fillStyle = this.color;
-                    ctx.globalAlpha = Math.min(1, 150 / (this.depth + 400)); // Niebla de lejanía
-                    ctx.fillRect(this.screenX, this.screenY, this.screenSize, this.screenSize);
-                    ctx.globalAlpha = 1;
-                    return;
-                }
-                
-                // Flores
-                ctx.save();
-                ctx.translate(this.screenX, this.screenY);
-                ctx.rotate(this.flowerRotation);
-                
-                // Dibujar usando la flor amarilla perfecta pre-creada
-                let drawSize = this.screenSize * (this.type === 2 ? 1.66 : 1.2); 
-                ctx.drawImage(cachedFlower, -drawSize / 2, -drawSize / 2, drawSize, drawSize);
-                
-                ctx.restore();
-
-                // Textos
-                if (this.wish) {
-                    let dx = this.screenX - mouse.x;
-                    let dy = this.screenY - mouse.y;
-                    let distSq = dx * dx + dy * dy;
-                    
-                    if (distSq < 62500) { // 250px
-                        let opacity = 1 - (Math.sqrt(distSq) / 250);
-                        opacity = Math.pow(opacity, 1.5);
-
-                        if (opacity > 0.01) {
-                            ctx.save();
-                            ctx.globalAlpha = opacity;
-                            
-                            // Tamaño de fuente responsivo: más pequeño en celulares para que quepa bien el texto
-                            let baseFontSize = width < 600 ? 14 : 22;
-                            ctx.font = 'bold ' + Math.max(10, baseFontSize * (800 / (800 + this.depth))) + 'px Poppins, sans-serif';
-                            
-                            let textOffset = this.screenSize / 2 + (width < 600 ? 10 : 15);
-                            
-                            // Borde
-                            ctx.lineWidth = 3;
-                            ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-                            ctx.strokeText(this.wish, this.screenX + textOffset, this.screenY + 5);
-                            // Relleno
-                            ctx.fillStyle = '#fce700'; 
-                            ctx.fillText(this.wish, this.screenX + textOffset, this.screenY + 5);
-                            
-                            ctx.restore();
-                        }
-                    }
-                }
-            }
-        }
-
-        function init() {
-            particles = [];
-            for (let i = 0; i < numParticles; i++) {
-                particles.push(new Particle(i));
-            }
-        }
-
-        function drawCoreGlow() {
-            // El núcleo de la galaxia brilla
-            // Necesitamos saber dónde está el centro en la pantalla
-            let y1 = 0 * Math.cos(currentTiltX) - 0 * Math.sin(currentTiltX);
-            let z1 = 0 * Math.sin(currentTiltX) + 0 * Math.cos(currentTiltX);
-            let x2 = 0 * Math.cos(currentTiltY) + z1 * Math.sin(currentTiltY);
-            let z2 = -0 * Math.sin(currentTiltY) + z1 * Math.cos(currentTiltY);
-            let fov = 800;
-            let perspective = (fov / (fov + z2)) * globalZoom;
-            let cx = width / 2 + x2 * perspective;
-            let cy = height / 2 + y1 * perspective;
+        function createTextTexture(text) {
+            const c = document.createElement('canvas');
+            c.width = 1024; c.height = 128;
+            const ctx = c.getContext('2d');
+            ctx.textAlign = 'center'; 
+            ctx.textBaseline = 'middle';
             
-            let gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, 300 * perspective);
-            gradient.addColorStop(0, 'rgba(255, 245, 150, 0.25)');
-            gradient.addColorStop(0.2, 'rgba(252, 231, 0, 0.1)');
-            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            // Sombra/Brillo
+            ctx.shadowColor = '#fce700'; 
+            ctx.shadowBlur = 15;
             
-            ctx.fillStyle = gradient;
-            // Solo llenar la zona central es más rápido, pero llenamos todo para asegurar
-            ctx.fillRect(0, 0, width, height);
+            let fontSize = 35; // Un poco más pequeño para acomodar textos largos
+            ctx.font = `bold ${fontSize}px 'Poppins', sans-serif`;
+            
+            // Borde oscuro para que se lea en el espacio
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+            ctx.strokeText(text, c.width/2, c.height/2);
+            
+            // Relleno amarillo
+            ctx.fillStyle = '#ffeb3b';
+            ctx.fillText(text, c.width/2, c.height/2);
+            
+            return new THREE.CanvasTexture(c);
         }
 
+        const textGroup = new THREE.Group();
+        scene.add(textGroup);
+
+        wishes.forEach((text, i) => {
+            const tex = createTextTexture(text);
+            const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
+            const sp = new THREE.Sprite(mat);
+            
+            sp.scale.set(120, 15, 1);
+            
+            // Distribuirlos por una espiral mucho más amplia para que no colisionen
+            let dist = 60 + (i * (600 / wishes.length));
+            let angle = (dist * 0.015) + ((i % 2) * Math.PI) + (Math.random() * 0.5);
+            
+            // Variar la altura para dar un efecto de nube de mensajes 3D
+            let heightOffset = (Math.random() - 0.5) * 60;
+            if (i >= wishes.length - 2) {
+                heightOffset = 30; // Los últimos mensajes (Ana, Renato) más arriba para resaltar
+            }
+            
+            sp.position.set(dist * Math.cos(angle), heightOffset, dist * Math.sin(angle));
+            sp.userData = { 
+                dist: dist, 
+                angle: angle, 
+                speed: 0.0003 + (10 / (dist + 50)) * 0.01,
+                yOffset: heightOffset
+            };
+            textGroup.add(sp);
+
+            // Añadir una flor grande justo debajo del texto
+            const bigFlower = new THREE.Sprite(flowerMat);
+            bigFlower.scale.set(20, 20, 1);
+            bigFlower.position.set(dist * Math.cos(angle), heightOffset - 15, dist * Math.sin(angle));
+            bigFlower.userData = { dist: dist, angle: angle, speed: sp.userData.speed, yOffset: heightOffset - 15 };
+            flowerGroup.add(bigFlower);
+        });
+
+        // Controles de Cámara interactivos (Click/Touch y arrastrar)
+        let dragging = false, lastX = 0, lastY = 0;
+        
+        function onDown(e) { 
+            dragging = true; 
+            const t = e.touches ? e.touches[0] : e; 
+            lastX = t.clientX; 
+            lastY = t.clientY; 
+        }
+        function onMove(e) { 
+            if (!dragging) return; 
+            const t = e.touches ? e.touches[0] : e; 
+            const dx = (t.clientX - lastX) / window.innerWidth; 
+            const dy = (t.clientY - lastY) / window.innerHeight; 
+            rotY -= dx * 5; 
+            rotX = Math.max(-1.5, Math.min(1.5, rotX + dy * 3.5)); 
+            lastX = t.clientX; 
+            lastY = t.clientY; 
+        }
+        function onUp() { dragging = false; }
+        
+        window.addEventListener('mousedown', onDown);
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+        
+        window.addEventListener('touchstart', onDown, { passive: true });
+        window.addEventListener('touchmove', onMove, { passive: true });
+        window.addEventListener('touchend', onUp, { passive: true });
+        
+        // Zoom (Rueda de mouse y pellizco)
+        window.addEventListener('wheel', (e) => { 
+            targetDist += e.deltaY * 0.25; 
+            targetDist = Math.max(100, Math.min(800, targetDist)); 
+        }, { passive: true });
+
+        let pinch = 0;
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches && e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const d = Math.hypot(dx, dy);
+                if (pinch) {
+                    targetDist += (pinch - d) * 1.5; 
+                    targetDist = Math.max(100, Math.min(800, targetDist));
+                }
+                pinch = d;
+            }
+        }, { passive: false });
+        window.addEventListener('touchend', () => { pinch = 0; }, { passive: true });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Loop de Animación WebGL
         function animate() {
-            // Fondo
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, width, height);
-            
-            // Interpolar tilt
-            currentTiltX += (targetTiltX - currentTiltX) * 0.05;
-            currentTiltY += (targetTiltY - currentTiltY) * 0.05;
-
-            drawCoreGlow();
-
-            // Z-Sort
-            particles.sort((a, b) => b.depth - a.depth);
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
-
             requestAnimationFrame(animate);
-        }
 
-        init();
+            // Orbitar flores (tanto las chicas como las grandes debajo de los textos)
+            flowerGroup.children.forEach(sp => {
+                sp.userData.angle -= sp.userData.speed;
+                sp.position.x = sp.userData.dist * Math.cos(sp.userData.angle);
+                sp.position.z = sp.userData.dist * Math.sin(sp.userData.angle);
+                if (sp.userData.yOffset !== undefined) {
+                    sp.position.y = sp.userData.yOffset + Math.sin(sp.userData.angle * 10) * 5;
+                }
+            });
+            
+            // Orbitar textos
+            textGroup.children.forEach(sp => {
+                sp.userData.angle -= sp.userData.speed;
+                sp.position.x = sp.userData.dist * Math.cos(sp.userData.angle);
+                sp.position.z = sp.userData.dist * Math.sin(sp.userData.angle);
+                
+                // Hacer que el texto flote suavemente alrededor de su altura específica
+                sp.position.y = sp.userData.yOffset + Math.sin(sp.userData.angle * 10) * 5;
+            });
+            
+            // Orbitar estrellas (Polvo estelar rota entero para optimizar)
+            stars.rotation.y -= 0.0005;
+
+            // Suavizar Zoom y Cámara
+            currentDist += (targetDist - currentDist) * 0.1;
+            const cx = Math.cos(rotX), sx = Math.sin(rotX); 
+            const cy = Math.cos(rotY), sy = Math.sin(rotY);
+            
+            camera.position.set(currentDist * sy * cx, currentDist * sx, currentDist * cy * cx);
+            camera.lookAt(0, 0, 0);
+            
+            renderer.render(scene, camera);
+        }
         animate();
     </script>
 </body>

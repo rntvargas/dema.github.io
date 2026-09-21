@@ -32,9 +32,9 @@
     </div>
 
     <script>
-        // Set date to September 20th of the current year
-        const now = new Date();
-        let targetDate = new Date(now.getFullYear(), 8, 20, 0, 0, 0); // Month 8 is Sept
+        // Configurar la fecha objetivo (21 de Septiembre del año actual)
+        const currentYear = new Date().getFullYear();
+        const targetDate = new Date(`September 21, ${currentYear} 00:00:00`).getTime();
         
         const timerEl = document.getElementById('timer');
         const countdownContainer = document.getElementById('countdown-container');

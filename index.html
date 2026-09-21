@@ -1,324 +1,65 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Para Ana Madeley 🌻 Día de las Flores Amarillas</title>
-<style>
-  :root{
-    --amarillo: #ffc93c;
-    --amarillo2: #ffe27a;
-    --naranja: #ff9f1c;
-    --fondo1: #2b1055;
-    --fondo2: #7597de;
-  }
-  *{ box-sizing: border-box; }
-  html,body{
-    margin:0; padding:0; height:100%; overflow-x:hidden;
-    font-family: 'Segoe UI', Tahoma, Verdana, sans-serif;
-    background: linear-gradient(-45deg, var(--fondo1), #4b2e83, var(--fondo2), #ffb703);
-    background-size: 400% 400%;
-    animation: gradientShift 18s ease infinite;
-    color:#fff;
-  }
-  @keyframes gradientShift{
-    0%{background-position:0% 50%;}
-    50%{background-position:100% 50%;}
-    100%{background-position:0% 50%;}
-  }
-
-  #petals-canvas{
-    position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none;
-  }
-
-  .stage{
-    position:relative; z-index:2; min-height:100vh;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; padding: 24px;
-  }
-
-  .title{
-    font-size: clamp(1.6rem, 4vw, 2.6rem);
-    text-shadow: 0 2px 12px rgba(0,0,0,.5);
-    margin-bottom: 6px;
-    animation: floatUp 3s ease-in-out infinite;
-  }
-  .subtitle{
-    font-size: clamp(1rem, 2.2vw, 1.3rem);
-    opacity:.9;
-    margin-bottom: 34px;
-  }
-  @keyframes floatUp{
-    0%,100%{ transform: translateY(0); }
-    50%{ transform: translateY(-8px); }
-  }
-
-  .countdown{
-    display:flex; gap: 18px; flex-wrap: wrap; justify-content:center;
-    margin-bottom: 40px;
-  }
-  .box{
-    background: rgba(255,255,255,0.12);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 18px;
-    padding: 18px 22px;
-    min-width: 90px;
-    box-shadow: 0 8px 32px rgba(0,0,0,.35);
-    transition: transform .3s;
-  }
-  .box:hover{ transform: translateY(-6px) scale(1.03); }
-  .box .num{
-    font-size: clamp(1.8rem, 5vw, 3rem);
-    font-weight:800;
-    color: var(--amarillo);
-    text-shadow: 0 0 18px rgba(255,201,60,.8);
-  }
-  .box .label{ font-size:.8rem; letter-spacing:1px; text-transform:uppercase; opacity:.85; }
-
-  .flower-icon{
-    font-size: 3rem;
-    animation: spinPulse 4s linear infinite;
-    margin-bottom: 10px;
-    filter: drop-shadow(0 0 20px rgba(255,201,60,.7));
-  }
-  @keyframes spinPulse{
-    0%{ transform: rotate(0deg) scale(1); }
-    50%{ transform: rotate(180deg) scale(1.15); }
-    100%{ transform: rotate(360deg) scale(1); }
-  }
-
-  #music-btn{
-    background: linear-gradient(135deg, var(--amarillo), var(--naranja));
-    border:none; color:#3a2200; font-weight:700; padding: 12px 26px;
-    border-radius: 999px; cursor:pointer; font-size:1rem;
-    box-shadow: 0 6px 20px rgba(255,159,28,.5);
-    transition: transform .2s;
-  }
-  #music-btn:hover{ transform: scale(1.06); }
-
-  /* ---------- Pantalla final ---------- */
-  #final-screen{
-    display:none;
-    position:relative; z-index:2;
-    min-height:100vh;
-    flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; padding: 24px;
-  }
-  #final-screen.show{ display:flex; }
-
-  .card{
-    background: rgba(255,255,255,0.14);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,.3);
-    border-radius: 26px;
-    padding: 40px 30px;
-    max-width: 620px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.4);
-    animation: appear 1.4s ease;
-  }
-  @keyframes appear{
-    0%{ opacity:0; transform: scale(.7) translateY(40px); }
-    100%{ opacity:1; transform: scale(1) translateY(0); }
-  }
-
-  .big-flowers{
-    font-size: 3.4rem;
-    margin-bottom: 12px;
-    animation: sway 2.5s ease-in-out infinite;
-  }
-  @keyframes sway{
-    0%,100%{ transform: rotate(-6deg); }
-    50%{ transform: rotate(6deg); }
-  }
-
-  .final-title{
-    font-size: clamp(1.8rem, 5vw, 3rem);
-    color: var(--amarillo);
-    text-shadow: 0 0 24px rgba(255,201,60,.8);
-    margin-bottom: 14px;
-  }
-  .final-msg{
-    font-size: clamp(1.05rem, 2.4vw, 1.3rem);
-    line-height: 1.6;
-    margin-bottom: 20px;
-  }
-  .signature{
-    font-style: italic;
-    font-size: 1.15rem;
-    opacity:.95;
-  }
-
-  footer{
-    position:relative; z-index:2;
-    text-align:center; padding: 18px; font-size:.8rem; opacity:.6;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="DATOS/css/style.css">
+    <link rel="icon" href="DATOS/img/flowers.png" type="image/x-icon">
+    <title>FLORES PARA ANA MADELEY</title>
 </head>
 <body>
+    <div class="greetings">
+        <span>A</span>
+        <span>N</span>
+        <span>A</span>
+    </div>
+    <div class="description" style="text-align: center; font-size: 2rem;">
+        <span>PARA MI PRECIOSA ANA MADELEY <3</span><br>
+        <span style="font-size: 1rem; color: #fff;">De parte de tu Renato</span>
+    </div>
 
-<canvas id="petals-canvas"></canvas>
+    <!-- Countdown Timer -->
+    <div id="countdown-container" class="description" style="color: #fff; font-size: 1.5rem; text-align: center;">
+        <p style="margin-bottom: 5px;">Faltan:</p>
+        <div id="timer" style="font-weight: bold; color: #fbff00; font-size: 2.5rem; text-shadow: 0 0 10px #fbff00;">Cargando...</div>
+    </div>
 
-<div class="stage" id="countdown-screen">
-  <div class="flower-icon">🌻</div>
-  <div class="title">Día de las Flores Amarillas</div>
-  <div class="subtitle">Un regalo especial para <strong>Ana Madeley</strong>, de parte de <strong>Renato</strong> 💛</div>
+    <div class="button" id="btn-flowers" style="display: none; margin-top: 20px;">
+        <button>
+            <a href="DATOS/FLORES.html">CLICK PLEASE</a>
+        </button>
+    </div>
 
-  <div class="countdown">
-    <div class="box"><div class="num" id="days">00</div><div class="label">días</div></div>
-    <div class="box"><div class="num" id="hours">00</div><div class="label">horas</div></div>
-    <div class="box"><div class="num" id="minutes">00</div><div class="label">minutos</div></div>
-    <div class="box"><div class="num" id="seconds">00</div><div class="label">segundos</div></div>
-  </div>
+    <script>
+        // Set date to September 21st of the current year
+        const now = new Date();
+        let targetDate = new Date(now.getFullYear(), 8, 21, 0, 0, 0); // Month 8 is Sept
+        
+        const timerEl = document.getElementById('timer');
+        const countdownContainer = document.getElementById('countdown-container');
+        const btnFlowers = document.getElementById('btn-flowers');
 
-  <button id="music-btn">🎵 Activar música</button>
-</div>
+        function updateCountdown() {
+            const currentTime = new Date();
+            const difference = targetDate - currentTime;
 
-<div id="final-screen">
-  <div class="card">
-    <div class="big-flowers">🌼🌻🌼</div>
-    <div class="final-title">¡Feliz Día de las Flores Amarillas!</div>
-    <p class="final-msg">
-      Ana Madeley, hoy es 21 de septiembre y llegaron tus flores amarillas.
-      Que simbolicen alegría, nuevos comienzos y todo lo bonito que mereces.
-      Espero que esta pequeña sorpresa te haga sonreír tanto como tú alegras
-      los días de quienes te rodean. 🌻💛
-    </p>
-    <p class="signature">Con cariño, Renato.</p>
-  </div>
-</div>
+            if (difference <= 0) {
+                // Time reached!
+                countdownContainer.style.display = 'none';
+                btnFlowers.style.display = 'block';
+            } else {
+                const d = Math.floor(difference / (1000 * 60 * 60 * 24));
+                const h = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((difference % (1000 * 60)) / 1000);
 
-<audio id="bg-music" loop preload="auto">
-  <source src="assets/music.mp3" type="audio/mpeg">
-</audio>
+                timerEl.innerHTML = `${d}d ${h}h ${m}m ${s}s`;
+            }
+        }
 
-<footer>Hecho con 💛 para Ana Madeley — 21 de septiembre</footer>
-
-<script>
-  // ================== CONFIGURACIÓN ==================
-  const TARGET_DATE = new Date("2026-09-20T00:00:00-05:00"); // hora Perú
-  const AUTOPLAY_MUSIC_ON_FINAL = true; // intenta reproducir música al llegar la fecha
-  // =====================================================
-
-  const daysEl = document.getElementById('days');
-  const hoursEl = document.getElementById('hours');
-  const minutesEl = document.getElementById('minutes');
-  const secondsEl = document.getElementById('seconds');
-  const countdownScreen = document.getElementById('countdown-screen');
-  const finalScreen = document.getElementById('final-screen');
-  const music = document.getElementById('bg-music');
-  const musicBtn = document.getElementById('music-btn');
-
-  let musicOn = false;
-  musicBtn.addEventListener('click', () => {
-    if (!musicOn) {
-      music.play().catch(()=>{});
-      musicBtn.textContent = "🔇 Pausar música";
-      musicOn = true;
-    } else {
-      music.pause();
-      musicBtn.textContent = "🎵 Activar música";
-      musicOn = false;
-    }
-  });
-
-  function pad(n){ return String(n).padStart(2,'0'); }
-
-  function revealFinal(){
-    countdownScreen.style.display = 'none';
-    finalScreen.classList.add('show');
-    if (AUTOPLAY_MUSIC_ON_FINAL && !musicOn) {
-      music.play().then(()=>{
-        musicBtn.textContent = "🔇 Pausar música";
-        musicOn = true;
-      }).catch(()=>{ /* el navegador puede bloquear autoplay hasta interacción */ });
-    }
-    startBigBloom();
-  }
-
-  function tick(){
-    const now = new Date();
-    const diff = TARGET_DATE - now;
-    if (diff <= 0){
-      daysEl.textContent = "00";
-      hoursEl.textContent = "00";
-      minutesEl.textContent = "00";
-      secondsEl.textContent = "00";
-      revealFinal();
-      clearInterval(timer);
-      return;
-    }
-    const d = Math.floor(diff / (1000*60*60*24));
-    const h = Math.floor((diff / (1000*60*60)) % 24);
-    const m = Math.floor((diff / (1000*60)) % 60);
-    const s = Math.floor((diff / 1000) % 60);
-    daysEl.textContent = pad(d);
-    hoursEl.textContent = pad(h);
-    minutesEl.textContent = pad(m);
-    secondsEl.textContent = pad(s);
-  }
-  const timer = setInterval(tick, 1000);
-  tick();
-
-  // ================== ANIMACIÓN DE PÉTALOS / FLORES ==================
-  const canvas = document.getElementById('petals-canvas');
-  const ctx = canvas.getContext('2d');
-  let W, H;
-  function resize(){
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
-  window.addEventListener('resize', resize);
-  resize();
-
-  const emojis = ['🌼','🌻','🌸'];
-  class Petal{
-    constructor(intense){
-      this.reset(true, intense);
-    }
-    reset(initial, intense){
-      this.x = Math.random() * W;
-      this.y = initial ? Math.random() * -H : -20 - Math.random()*100;
-      this.size = 14 + Math.random() * (intense ? 26 : 18);
-      this.speedY = (0.6 + Math.random() * 1.6) * (intense ? 1.8 : 1);
-      this.speedX = (Math.random() - 0.5) * 1.2;
-      this.rot = Math.random() * 360;
-      this.rotSpeed = (Math.random() - 0.5) * 3;
-      this.emoji = emojis[Math.floor(Math.random()*emojis.length)];
-      this.opacity = 0.6 + Math.random()*0.4;
-    }
-    update(intense){
-      this.y += this.speedY * (intense ? 1.6 : 1);
-      this.x += this.speedX + Math.sin(this.y*0.01);
-      this.rot += this.rotSpeed;
-      if (this.y > H + 30) this.reset(false, intense);
-    }
-    draw(){
-      ctx.save();
-      ctx.globalAlpha = this.opacity;
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.rot * Math.PI/180);
-      ctx.font = `${this.size}px serif`;
-      ctx.textAlign = 'center';
-      ctx.fillText(this.emoji, 0, 0);
-      ctx.restore();
-    }
-  }
-
-  let intenseMode = false;
-  let petals = Array.from({length: 26}, () => new Petal(false));
-
-  function startBigBloom(){
-    intenseMode = true;
-    petals = petals.concat(Array.from({length: 70}, () => new Petal(true)));
-  }
-
-  function animate(){
-    ctx.clearRect(0,0,W,H);
-    petals.forEach(p => { p.update(intenseMode); p.draw(); });
-    requestAnimationFrame(animate);
-  }
-  animate();
-</script>
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+    </script>
 </body>
 </html>
